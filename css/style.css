@@ -673,6 +673,9 @@ body.has-cursor-preview .work-row { cursor: none; }
      this with a precise per-line fit to the full width */
   font-size: clamp(2.6rem, 8.6vw, 6.5rem);
 }
+/* the <wbr> hooks in the markup exist only for the wrapped phone layout;
+   on the fitted desktop line they must not become stray flex items */
+.cover-fit > wbr { display: none; }
 
 /* small photography/video tucked into the gaps between words, scaled in
    step with the surrounding type via em sizing */
@@ -1278,6 +1281,51 @@ body.has-spread-cursor .spread { cursor: none; }
 
 @media (max-width: 640px) {
   .edit-caps { grid-template-columns: 1fr; }
+}
+
+/* Phone cover hero: the edge-to-edge single-line fit needs ~550px of width
+   before the type gets too small to read, so below 768px we drop the
+   nowrap/JS-fit model entirely (hero-fit.js bails out at the same
+   breakpoint) and let each headline line wrap at word boundaries at a
+   fluid size. Wrapping is what guarantees no clipping and no h-scroll:
+   the widest single word (PRODUCER) is ~59% of the font size in width, so
+   it fits the column with room to spare at every phone width. */
+@media (max-width: 767.98px) {
+  .cover-hero {
+    padding-top: clamp(40px, 7vh, 72px);
+    padding-bottom: clamp(36px, 6vh, 64px);
+  }
+
+  .cover-wrap { padding: 0 20px; }
+  .cover-headline { margin-top: 16px; }
+
+  .cover-line { overflow: visible; }
+  .cover-line + .cover-line { margin-top: 4px; }
+
+  .cover-fit {
+    display: block;
+    white-space: normal;
+    overflow-wrap: break-word;   /* last-resort guard, not the usual path */
+    line-height: 1.15;
+    font-size: clamp(1.75rem, 9.4vw, 3.4rem);
+  }
+  .cover-fit > wbr { display: inline; }
+
+  /* keep the inline photo/video tucked into the type, but let a line break
+     fall either side of it (the <wbr> hooks in the markup) */
+  .cover-media { margin: 0 0.12em; }
+
+  .cover-foot {
+    display: block;
+    margin-top: 28px;
+    padding-top: 20px;
+  }
+  .cover-foot .dek {
+    max-width: 100%;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+  }
+  .cover-foot .hero-actions { margin-top: 20px; }
 }
 
 /* ---------- responsive ---------- */

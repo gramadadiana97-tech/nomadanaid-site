@@ -4,26 +4,48 @@
 // a mask-reveal on load. Vanilla sizing logic; GSAP only drives motion.
 
 (function () {
-  var MIN_PX = 34;
+  // Below this width the lines are wrapped by CSS instead of fitted here —
+  // a single nowrap line of "AND AI VIDEO ... PRODUCER" can't be both
+  // unclipped and readable on a phone. See the matching breakpoint in
+  // css/style.css.
+  var FIT_MIN_VIEWPORT = 768;
   var MAX_PX = 230;
+  // sub-pixel rounding headroom so a fitted line never touches the edge
+  var SAFETY_PX = 1;
 
   function fitLine(el, targetWidth) {
     if (!targetWidth) return;
     var base = 100;
     el.style.fontSize = base + 'px';
-    var natural = el.scrollWidth;
+    // getBoundingClientRect is sub-pixel; scrollWidth is rounded to an
+    // integer and can under-report by up to 1px, which scales up to a
+    // visibly clipped last letter at display sizes.
+    var natural = Math.max(el.getBoundingClientRect().width, el.scrollWidth);
     if (!natural) return;
-    var size = (targetWidth / natural) * base;
-    size = Math.max(MIN_PX, Math.min(size, MAX_PX));
+    // Pure fit-to-width, with only an upper bound. There is deliberately no
+    // lower bound: .cover-line clips with overflow:hidden, so forcing a
+    // minimum size would silently cut the end off the line.
+    var size = Math.min(((targetWidth - SAFETY_PX) / natural) * base, MAX_PX);
     el.style.fontSize = size + 'px';
   }
 
   function fitAll() {
     var headline = document.querySelector('.cover-headline');
     if (!headline) return;
-    var target = headline.clientWidth;
     var lines = headline.querySelectorAll('.cover-fit');
-    for (var i = 0; i < lines.length; i++) {
+    var i;
+
+    if (window.innerWidth < FIT_MIN_VIEWPORT) {
+      // Hand sizing back to the stylesheet (and clear anything a previous
+      // wider-viewport fit left behind on resize/rotate).
+      for (i = 0; i < lines.length; i++) {
+        lines[i].style.fontSize = '';
+      }
+      return;
+    }
+
+    var target = headline.clientWidth;
+    for (i = 0; i < lines.length; i++) {
       fitLine(lines[i], target);
     }
   }
